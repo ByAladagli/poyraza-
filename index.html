@@ -3,225 +3,527 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Araçları - Giriş Kayıt</title>
-    <!-- Firebase SDK -->
+    <title>Poyraz AI - Profesyonel Yapay Zeka Araçları</title>
+    <!-- Firebase & UI Kütüphaneleri -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --dark-color: #1a1a2e;
+            --light-color: #f8f9fa;
+            --danger-color: #f72585;
+            --success-color: #4cc9f0;
+        }
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f7fa;
-            color: #333;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7ff;
+            color: var(--dark-color);
         }
-        .container {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: var(--primary-color) !important;
         }
-        h1 {
-            color: #4a6baf;
-            text-align: center;
-        }
-        .tab {
-            display: flex;
-            margin-bottom: 20px;
-        }
-        .tab button {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            background: #e1e5ee;
-            cursor: pointer;
-        }
-        .tab button.active {
-            background: #4a6baf;
+        
+        .premium-badge {
+            background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
             color: white;
-        }
-        input, textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        button {
-            background: #4a6baf;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            width: 100%;
-        }
-        #authContainer, #aiToolsContainer {
-            display: none;
-        }
-        #userInfo {
-            text-align: right;
-            margin-bottom: 15px;
             font-weight: bold;
-            color: #4a6baf;
         }
-        .error {
-            color: red;
-            margin-top: 5px;
+        
+        .ai-card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .ai-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .tool-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+        
+        .pricing-card {
+            border: 3px solid var(--primary-color);
+            border-radius: 15px;
+        }
+        
+        .btn-premium {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-weight: bold;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+        }
+        
+        #userAvatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Giriş/Kayıt Formu -->
-        <div id="authContainer">
-            <h1>Hoş Geldiniz</h1>
-            <div id="loginForm">
-                <h2>Giriş Yap</h2>
-                <input type="email" id="loginEmail" placeholder="E-posta">
-                <input type="password" id="loginPassword" placeholder="Şifre">
-                <button onclick="login()">Giriş Yap</button>
-                <p class="error" id="loginError"></p>
-                <p>Hesabınız yok mu? <a href="#" onclick="showRegister()">Kayıt Olun</a></p>
-            </div>
-
-            <div id="registerForm" style="display: none;">
-                <h2>Kayıt Ol</h2>
-                <input type="text" id="registerName" placeholder="Ad Soyad">
-                <input type="email" id="registerEmail" placeholder="E-posta">
-                <input type="password" id="registerPassword" placeholder="Şifre (min 6 karakter)">
-                <button onclick="register()">Kayıt Ol</button>
-                <p class="error" id="registerError"></p>
-                <p>Zaten hesabınız var mı? <a href="#" onclick="showLogin()">Giriş Yapın</a></p>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-robot me-2"></i>Poyraz AI
+            </a>
+            <div class="d-flex align-items-center">
+                <div id="authButtons">
+                    <button class="btn btn-outline-primary me-2" onclick="showLoginModal()">Giriş Yap</button>
+                    <button class="btn btn-primary" onclick="showRegisterModal()">Kayıt Ol</button>
+                </div>
+                <div id="userMenu" style="display: none;">
+                    <div class="dropdown">
+                        <img id="userAvatar" src="https://ui-avatars.com/api/?name=Kullanıcı&background=random" 
+                             class="dropdown-toggle" data-bs-toggle="dropdown">
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header" id="userEmail"></h6></li>
+                            <li><a class="dropdown-item" href="#" onclick="showBillingModal()"><i class="fas fa-crown me-2"></i>Premium Yükselt</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i>Çıkış Yap</a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
+    </nav>
 
-        <!-- AI Araçları (Giriş yapınca görünecek) -->
-        <div id="aiToolsContainer">
-            <div id="userInfo"></div>
-            <button onclick="logout()" style="background: #e74c3c; margin-bottom: 20px;">Çıkış Yap</button>
-            
-            <div class="tab">
-                <button class="tab-button active" onclick="openTab('textTab')">Metin Üret</button>
-                <button class="tab-button" onclick="openTab('imageTab')">Resim Üret</button>
+    <!-- Hero Section -->
+    <section class="py-5 bg-primary text-white">
+        <div class="container py-5">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold mb-4">Yapay Zeka Gücünü Keşfet</h1>
+                    <p class="lead mb-4">Profesyonel AI araçlarıyla üretkenliğinizi katlayın. 1 ücretsiz deneme hakkıyla hemen başlayın!</p>
+                    <button class="btn btn-light btn-lg me-2" onclick="showRegisterModal()">Ücretsiz Dene</button>
+                    <button class="btn btn-outline-light btn-lg" onclick="showPricingModal()">Premium Al</button>
+                </div>
+                <div class="col-lg-6">
+                    <img src="https://illustrations.popsy.co/amber/artificial-intelligence.svg" class="img-fluid">
+                </div>
             </div>
-            
-            <div id="textTab" class="tab-content" style="display: block;">
-                <h3>Metin Üret (GPT-2)</h3>
-                <textarea id="textPrompt" rows="3" placeholder="Bir şeyler yazın..."></textarea>
-                <button onclick="generateText()">Oluştur</button>
-                <div id="textResult" class="result-container"></div>
+        </div>
+    </section>
+
+    <!-- AI Tools Section -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5 fw-bold">Poyraz AI Araçları</h2>
+            <div class="row g-4">
+                <!-- Metin Üretme -->
+                <div class="col-md-4">
+                    <div class="ai-card h-100 p-4 text-center">
+                        <div class="tool-icon">
+                            <i class="fas fa-comment-dots"></i>
+                        </div>
+                        <h4>Metin Üretme</h4>
+                        <p>GPT-4 seviyesinde metin oluşturma</p>
+                        <button class="btn btn-primary" onclick="checkAccess('text')">Kullan</button>
+                    </div>
+                </div>
+                
+                <!-- Resim Üretme -->
+                <div class="col-md-4">
+                    <div class="ai-card h-100 p-4 text-center">
+                        <div class="tool-icon">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        <h4>Resim Üretme</h4>
+                        <p>DALL-E 3 kalitesinde görsel oluştur</p>
+                        <button class="btn btn-primary" onclick="checkAccess('image')">Kullan</button>
+                    </div>
+                </div>
+                
+                <!-- Müzik Üretme -->
+                <div class="col-md-4">
+                    <div class="ai-card h-100 p-4 text-center">
+                        <div class="tool-icon">
+                            <i class="fas fa-music"></i>
+                        </div>
+                        <h4>Müzik Üretme</h4>
+                        <p>Suno AI ile özgün besteler</p>
+                        <button class="btn btn-primary" onclick="checkAccess('music')">Kullan</button>
+                    </div>
+                </div>
             </div>
-            
-            <div id="imageTab" class="tab-content" style="display: none;">
-                <h3>Resim Üret (Stable Diffusion)</h3>
-                <input type="text" id="imagePrompt" placeholder="Bir resim tanımı yazın...">
-                <button onclick="generateImage()">Oluştur</button>
-                <div id="imageResultContainer">
-                    <img id="imageResult" style="display: none; max-width: 100%;">
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-5 fw-bold">Fiyatlandırma</h2>
+            <div class="row justify-content-center">
+                <div class="col-lg-4 mb-4">
+                    <div class="pricing-card p-4 text-center h-100">
+                        <h4>Ücretsiz</h4>
+                        <h2 class="my-4">$0/ay</h2>
+                        <ul class="list-unstyled mb-4">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>1 deneme hakkı</li>
+                            <li class="mb-2"><i class="fas fa-times text-danger me-2"></i>Sınırlı erişim</li>
+                            <li class="mb-2"><i class="fas fa-times text-danger me-2"></i>Premium özellikler yok</li>
+                        </ul>
+                        <button class="btn btn-outline-primary" onclick="showRegisterModal()">Kayıt Ol</button>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="pricing-card p-4 text-center h-100 bg-white shadow">
+                        <span class="badge premium-badge mb-3">POPÜLER</span>
+                        <h4>Premium</h4>
+                        <h2 class="my-4">$250/ay</h2>
+                        <ul class="list-unstyled mb-4">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Sınırsız kullanım</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Tüm AI araçları</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Öncelikli destek</li>
+                        </ul>
+                        <button class="btn btn-premium" onclick="showBillingModal()">Hemen Yükselt</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modals -->
+    <!-- Giriş Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Giriş Yap</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <button class="btn btn-outline-dark w-100 mb-3" onclick="googleLogin()">
+                        <i class="fab fa-google me-2"></i>Google ile Giriş
+                    </button>
+                    <div class="text-center my-3">VEYA</div>
+                    <div class="mb-3">
+                        <label class="form-label">E-posta</label>
+                        <input type="email" class="form-control" id="loginEmail">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Şifre</label>
+                        <input type="password" class="form-control" id="loginPassword">
+                    </div>
+                    <div class="text-end mb-3">
+                        <a href="#" onclick="showResetPasswordModal()">Şifremi Unuttum?</a>
+                    </div>
+                    <button class="btn btn-primary w-100" onclick="login()">Giriş Yap</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Kayıt Modal -->
+    <div class="modal fade" id="registerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Kayıt Ol</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <button class="btn btn-outline-dark w-100 mb-3" onclick="googleLogin()">
+                        <i class="fab fa-google me-2"></i>Google ile Kayıt
+                    </button>
+                    <div class="text-center my-3">VEYA</div>
+                    <div class="mb-3">
+                        <label class="form-label">Ad Soyad</label>
+                        <input type="text" class="form-control" id="registerName">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">E-posta</label>
+                        <input type="email" class="form-control" id="registerEmail">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Şifre (min 6 karakter)</label>
+                        <input type="password" class="form-control" id="registerPassword">
+                    </div>
+                    <button class="btn btn-primary w-100" onclick="register()">Kayıt Ol</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ödeme Modal -->
+    <div class="modal fade" id="billingModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Premium Üyelik</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>Ücretsiz deneme hakkınızı kullandınız. Sınırsız erişim için premium üye olun.
+                    </div>
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Premium Üyelik</h5>
+                            <p class="card-text">$250/ay (otomatik yenilenir)</p>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="termsCheck">
+                                <label class="form-check-label" for="termsCheck">
+                                    <a href="#">Hizmet Şartları</a>'nı kabul ediyorum
+                                </label>
+                            </div>
+                            <div id="paymentElement">
+                                <!-- Stripe ödeme formu buraya gelecek -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Tool Modals -->
+    <div class="modal fade" id="aiToolModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="toolModalTitle">AI Aracı</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="toolContent">
+                        <!-- Dinamik içerik buraya gelecek -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap & Firebase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://js.stripe.com/v3/"></script>
     <script>
         // Firebase Config (Kendi bilgilerinizle değiştirin)
         const firebaseConfig = {
             apiKey: "AIzaSyYOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            authDomain: "poyraz-ai.firebaseapp.com",
+            projectId: "poyraz-ai",
+            storageBucket: "poyraz-ai.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef1234567890"
         };
         
         // Firebase'i başlat
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
-
-        // Sayfa yüklendiğinde kullanıcı durumunu kontrol et
+        const db = firebase.firestore();
+        const stripe = Stripe('YOUR_STRIPE_PUBLIC_KEY');
+        
+        // UI Elementleri
+        const loginModal = new bootstrap.Modal('#loginModal');
+        const registerModal = new bootstrap.Modal('#registerModal');
+        const billingModal = new bootstrap.Modal('#billingModal');
+        const aiToolModal = new bootstrap.Modal('#aiToolModal');
+        
+        // Kullanıcı durumunu izle
         auth.onAuthStateChanged(user => {
             if (user) {
-                // Giriş yapılmış
-                document.getElementById('authContainer').style.display = 'none';
-                document.getElementById('aiToolsContainer').style.display = 'block';
-                document.getElementById('userInfo').innerHTML = 
-                    `Merhaba, ${user.displayName || user.email.split('@')[0]}!`;
+                // Kullanıcı giriş yapmış
+                document.getElementById('authButtons').style.display = 'none';
+                document.getElementById('userMenu').style.display = 'block';
+                document.getElementById('userEmail').textContent = user.email;
+                
+                // Kullanıcı bilgilerini kontrol et
+                checkUserSubscription(user.uid);
             } else {
-                // Giriş yapılmamış
-                document.getElementById('authContainer').style.display = 'block';
-                document.getElementById('aiToolsContainer').style.display = 'none';
+                // Kullanıcı giriş yapmamış
+                document.getElementById('authButtons').style.display = 'block';
+                document.getElementById('userMenu').style.display = 'none';
             }
         });
-
-        // Giriş/Kayıt Fonksiyonları
-        function showRegister() {
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('registerForm').style.display = 'block';
-        }
-
-        function showLogin() {
-            document.getElementById('registerForm').style.display = 'none';
-            document.getElementById('loginForm').style.display = 'block';
-        }
-
-        function login() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            const errorElement = document.getElementById('loginError');
-            
-            errorElement.textContent = '';
-            
-            auth.signInWithEmailAndPassword(email, password)
+        
+        // Google ile giriş/kayıt
+        function googleLogin() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then(result => {
+                    // İlk girişte kullanıcıyı firestore'a kaydet
+                    if (result.additionalUserInfo.isNewUser) {
+                        db.collection('users').doc(result.user.uid).set({
+                            name: result.user.displayName,
+                            email: result.user.email,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            subscription: 'free',
+                            remainingCredits: 1
+                        });
+                    }
+                    loginModal.hide();
+                })
                 .catch(error => {
-                    errorElement.textContent = error.message;
+                    alert('Hata: ' + error.message);
                 });
         }
-
+        
+        // Email/şifre ile kayıt
         function register() {
             const name = document.getElementById('registerName').value;
             const email = document.getElementById('registerEmail').value;
             const password = document.getElementById('registerPassword').value;
-            const errorElement = document.getElementById('registerError');
-            
-            errorElement.textContent = '';
             
             auth.createUserWithEmailAndPassword(email, password)
                 .then(userCredential => {
-                    // Kullanıcı adını güncelle
-                    return userCredential.user.updateProfile({
-                        displayName: name
+                    // Firestore'a kullanıcı bilgilerini kaydet
+                    return db.collection('users').doc(userCredential.user.uid).set({
+                        name: name,
+                        email: email,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        subscription: 'free',
+                        remainingCredits: 1
                     });
                 })
+                .then(() => {
+                    registerModal.hide();
+                })
                 .catch(error => {
-                    errorElement.textContent = error.message;
+                    alert('Hata: ' + error.message);
                 });
         }
-
+        
+        // Email/şifre ile giriş
+        function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    loginModal.hide();
+                })
+                .catch(error => {
+                    alert('Hata: ' + error.message);
+                });
+        }
+        
+        // Çıkış yap
         function logout() {
             auth.signOut();
         }
-
-        // AI Fonksiyonları (Önceki örnekle aynı)
-        function openTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.style.display = 'none';
-            });
-            document.querySelectorAll('.tab-button').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.getElementById(tabName).style.display = 'block';
-            event.currentTarget.classList.add('active');
+        
+        // Kullanıcı abonelik durumunu kontrol et
+        function checkUserSubscription(uid) {
+            db.collection('users').doc(uid).get()
+                .then(doc => {
+                    if (doc.exists) {
+                        const userData = doc.data();
+                        if (userData.subscription === 'premium') {
+                            // Premium kullanıcı
+                            document.querySelectorAll('.premium-badge').forEach(el => {
+                                el.style.display = 'inline-block';
+                            });
+                        } else {
+                            // Ücretsiz kullanıcı
+                            document.querySelectorAll('.premium-badge').forEach(el => {
+                                el.style.display = 'none';
+                            });
+                        }
+                    }
+                });
         }
-
+        
+        // AI aracına erişim kontrolü
+        function checkAccess(toolType) {
+            const user = auth.currentUser;
+            
+            if (!user) {
+                showLoginModal();
+                return;
+            }
+            
+            db.collection('users').doc(user.uid).get()
+                .then(doc => {
+                    if (doc.exists) {
+                        const userData = doc.data();
+                        
+                        if (userData.subscription === 'premium' || userData.remainingCredits > 0) {
+                            // Erişim izni var
+                            if (userData.subscription !== 'premium') {
+                                // Kredi kullan
+                                db.collection('users').doc(user.uid).update({
+                                    remainingCredits: firebase.firestore.FieldValue.increment(-1)
+                                });
+                            }
+                            openAITool(toolType);
+                        } else {
+                            // Kredi yok, premium teklif et
+                            billingModal.show();
+                        }
+                    }
+                });
+        }
+        
+        // AI aracını aç
+        function openAITool(toolType) {
+            const toolTitle = document.getElementById('toolModalTitle');
+            const toolContent = document.getElementById('toolContent');
+            
+            switch(toolType) {
+                case 'text':
+                    toolTitle.textContent = 'Metin Üretme Aracı';
+                    toolContent.innerHTML = `
+                        <textarea class="form-control mb-3" rows="5" placeholder="Ne yazmak istersiniz?"></textarea>
+                        <button class="btn btn-primary" onclick="generateText()">Oluştur</button>
+                        <div class="mt-3 p-3 bg-light rounded" id="textResult"></div>
+                    `;
+                    break;
+                    
+                case 'image':
+                    toolTitle.textContent = 'Resim Üretme Aracı';
+                    toolContent.innerHTML = `
+                        <input type="text" class="form-control mb-3" placeholder="Resim tanımını yazın...">
+                        <button class="btn btn-primary" onclick="generateImage()">Oluştur</button>
+                        <div class="mt-3 text-center">
+                            <img id="generatedImage" style="max-width: 100%; display: none;">
+                        </div>
+                    `;
+                    break;
+                    
+                case 'music':
+                    toolTitle.textContent = 'Müzik Üretme Aracı';
+                    toolContent.innerHTML = `
+                        <input type="text" class="form-control mb-3" placeholder="Müzik tarzı veya konusu...">
+                        <button class="btn btn-primary" onclick="generateMusic()">Oluştur</button>
+                        <div class="mt-3">
+                            <audio controls id="generatedMusic" style="width: 100%; display: none;"></audio>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            aiToolModal.show();
+        }
+        
+        // API Entegrasyonları
         async function generateText() {
-            const prompt = document.getElementById('textPrompt').value;
+            const prompt = document.querySelector('#aiToolModal textarea').value;
             const resultDiv = document.getElementById('textResult');
             
-            resultDiv.innerHTML = "Oluşturuluyor...";
+            resultDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Oluşturuluyor...</div>';
             
             try {
+                // Ücretsiz Hugging Face API (GPT-2)
                 const response = await fetch("https://api-inference.huggingface.co/models/gpt2", {
                     method: "POST",
                     headers: {
@@ -232,20 +534,21 @@
                 });
                 
                 const data = await response.json();
-                resultDiv.innerHTML = data[0].generated_text || "Sonuç alınamadı";
+                resultDiv.innerHTML = data[0].generated_text;
             } catch (error) {
-                resultDiv.innerHTML = "Hata: " + error.message;
+                resultDiv.innerHTML = `<div class="alert alert-danger">Hata: ${error.message}</div>`;
             }
         }
-
+        
         async function generateImage() {
-            const prompt = document.getElementById('imagePrompt').value;
-            const imgElement = document.getElementById('imageResult');
+            const prompt = document.querySelector('#aiToolModal input').value;
+            const imgElement = document.getElementById('generatedImage');
             
-            imgElement.style.display = "none";
-            document.getElementById('imageResultContainer').innerHTML = "Oluşturuluyor...";
+            imgElement.style.display = 'none';
+            document.querySelector('#aiToolModal .text-center').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Oluşturuluyor...';
             
             try {
+                // Ücretsiz Stable Diffusion API
                 const response = await fetch("https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0", {
                     method: "POST",
                     headers: {
@@ -258,11 +561,53 @@
                 const blob = await response.blob();
                 const imgUrl = URL.createObjectURL(blob);
                 imgElement.src = imgUrl;
-                imgElement.style.display = "block";
-                document.getElementById('imageResultContainer').innerHTML = '';
-                document.getElementById('imageResultContainer').appendChild(imgElement);
+                imgElement.style.display = 'block';
             } catch (error) {
-                document.getElementById('imageResultContainer').innerHTML = "Hata: " + error.message;
+                document.querySelector('#aiToolModal .text-center').innerHTML = `<div class="alert alert-danger">Hata: ${error.message}</div>`;
+            }
+        }
+        
+        function generateMusic() {
+            // Suno AI API entegrasyonu (demo amaçlı simüle edildi)
+            document.getElementById('generatedMusic').style.display = 'none';
+            document.querySelector('#aiToolModal .mt-3').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Müzik oluşturuluyor... (Bu işlem 1-2 dakika sürebilir)';
+            
+            setTimeout(() => {
+                // Gerçek uygulamada Suno API'sine istek atılacak
+                const audioElement = document.getElementById('generatedMusic');
+                audioElement.src = "https://example.com/demo-music.mp3"; // Demo ses dosyası
+                audioElement.style.display = 'block';
+                document.querySelector('#aiToolModal .mt-3').innerHTML = '';
+                document.querySelector('#aiToolModal .mt-3').appendChild(audioElement);
+            }, 3000);
+        }
+        
+        // Modal gösterim fonksiyonları
+        function showLoginModal() {
+            loginModal.show();
+        }
+        
+        function showRegisterModal() {
+            registerModal.show();
+        }
+        
+        function showBillingModal() {
+            billingModal.show();
+            
+            // Stripe ödeme formunu yükle
+            setTimeout(() => {
+                const elements = stripe.elements();
+                const paymentElement = elements.create('payment');
+                paymentElement.mount('#paymentElement');
+            }, 500);
+        }
+        
+        function showResetPasswordModal() {
+            const email = prompt("Şifre sıfırlama linki gönderilecek e-posta adresinizi girin:");
+            if (email) {
+                auth.sendPasswordResetEmail(email)
+                    .then(() => alert("Şifre sıfırlama linki gönderildi!"))
+                    .catch(error => alert("Hata: " + error.message));
             }
         }
     </script>
